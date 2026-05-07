@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>2-Tier Flask App</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 50px auto; }
+        input { padding: 8px; width: 70%; }
+        button { padding: 8px 16px; }
+        li { margin: 8px 0; }
+    </style>
+</head>
+<body>
+    <h2>Messages</h2>
+
+    <form action="/add" method="POST">
+        <input type="text" name="message" placeholder="Enter message..." required>
+        <button type="submit">Add</button>
+    </form>
+
+    <ul>
+        {% for msg in messages %}
+            <li>{{ msg[1] }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

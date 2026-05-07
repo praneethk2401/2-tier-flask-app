@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Clone Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/<your-username>/<your-repo>.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir('app') {
+                    sh 'docker build -t flask-app:latest .'
+                }
+            }
+        }
+
+        stage('Deploy with Docker Compose') {
+            steps {
+                dir('app') {
+                    sh 'docker compose down || true'
+                    sh 'docker compose up -d --build'
+                }
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                sh 'sleep 20'
+                sh 'curl -f http://localhost:5000/health || exit 1'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Deployment successful. Flask app is live.'
+        }
+        failure {
+            echo 'Deployment failed. Check logs above.'
+        }
+    }
+}
