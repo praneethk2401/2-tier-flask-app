@@ -1,38 +1,29 @@
 #!/bin/bash
+exec > /var/log/user_data.log 2>&1
 
-# Update system
 apt-get update -y
 apt-get upgrade -y
 
-# Install dependencies
 apt-get install -y \
   git \
   curl \
+  wget \
   docker.io \
-  docker-compose-v2 \
-  openjdk-17-jdk
+  docker-compose-v2
 
-# Start and enable Docker
 systemctl start docker
 systemctl enable docker
 
-# Install Jenkins
-curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | \
-  tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+# Run Jenkins as Docker container
+docker volume create jenkins_home
 
-echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
-  https://pkg.jenkins.io/debian-stable binary/ | \
-  tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+docker run -d \
+  --name jenkins \
+  --restart unless-stopped \
+  -p 8080:8080 \
+  -p 50000:50000 \
+  -v jenkins_home:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  jenkins/jenkins:lts
 
-apt-get update -y
-apt-get install -y jenkins
-
-# Start and enable Jenkins
-systemctl start jenkins
-systemctl enable jenkins
-
-# Add jenkins user to docker group
-usermod -aG docker jenkins
-
-# Restart jenkins to apply docker group
-systemctl restart jenkins
+echo "user_data.sh completed successfully"

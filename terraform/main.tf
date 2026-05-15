@@ -113,6 +113,7 @@ resource "aws_instance" "flask_server" {
   ami = var.ami_id
   instance_type = var.instance_type
   key_name = aws_key_pair.flask_key.key_name
+  subnet_id = aws_subnet.flask_subnet.id
   vpc_security_group_ids = [aws_security_group.flask_sg.id]
   user_data = file("user_data.sh")
 
