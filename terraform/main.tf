@@ -110,12 +110,17 @@ resource "aws_security_group" "flask_sg" {
 
 # EC2 Instance
 resource "aws_instance" "flask_server" {
-  ami = var.ami_id
-  instance_type = var.instance_type
-  key_name = aws_key_pair.flask_key.key_name
-  subnet_id = aws_subnet.flask_subnet.id
+  ami                    = var.ami_id
+  instance_type          = var.instance_type
+  key_name               = aws_key_pair.flask_key.key_name
+  subnet_id              = aws_subnet.flask_subnet.id
   vpc_security_group_ids = [aws_security_group.flask_sg.id]
-  user_data = file("user_data.sh")
+  user_data              = file("user_data.sh")
+
+  root_block_device {
+    volume_size = 20
+    volume_type = "gp3"
+  }
 
   tags = {
     Name = "flask-jenkins-server"
