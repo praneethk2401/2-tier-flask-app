@@ -1,4 +1,4 @@
-# 2-Tier Flask App — Automated CI/CD Pipeline with Terraform & Jenkins on AWS
+# AutoStack — Automated 2-Tier AWS Deployment Pipeline with Terraform & Jenkins
 
 A fully automated cloud infrastructure project that provisions AWS resources using Terraform and deploys a containerized 2-tier web application (Flask + MySQL) via a Jenkins CI/CD pipeline running inside Docker.
 
@@ -13,7 +13,7 @@ Developer → GitHub → Jenkins (Docker) → Docker Compose → Flask + MySQL
     (VPC, EC2, SG, IGW, Subnet)
 ```
 
-Every `git push` to `main` branch automatically triggers Jenkins which builds the Docker image and redeploys the application — zero manual intervention.
+Every `git push` to the `main` branch automatically triggers Jenkins, which builds the Docker image and redeploys the application — zero manual intervention.
 
 ---
 
@@ -66,7 +66,23 @@ Custom AWS networking built from scratch — no default VPC used.
 | Security Group | Ports 22 (SSH), 8080 (Jenkins), 5000 (Flask) |
 | EC2 Instance | t3.micro, Ubuntu 22.04, 20GB gp3 disk |
 
-> Screenshot 1 — AWS Console showing VPC, Subnet, IGW, Security Group and EC2 instance running
+![VPC created](images/01-vpc-created.png)
+*VPC created — 10.0.0.0/16*
+
+![Subnet created](images/02-subnet-created.png)
+*Public subnet created — 10.0.1.0/24*
+
+![Internet Gateway attached](images/03-internet-gateway-created.png)
+*Internet Gateway attached to the VPC*
+
+![Security Group ports](images/04-security-group-ports.png)
+*Security Group — ports 22, 8080, 5000 opened*
+
+![EC2 instance running](images/05-ec2-instance-running.png)
+*EC2 instance running (t3.micro, Ubuntu 22.04)*
+
+![EC2 volume](images/06-ec2-volume-20gb.png)
+*20GB gp3 root volume attached*
 
 ---
 
@@ -85,8 +101,6 @@ terraform init
 terraform plan
 terraform apply
 ```
-
-> Screenshot 2 — Terminal showing `terraform apply` output with `Apply complete! Resources: 8 added` and outputs printed
 
 After apply completes, terminal prints:
 
@@ -110,7 +124,8 @@ docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 
 Open `http://<ec2-ip>:8080` → paste password → install suggested plugins → create admin user.
 
-> Screenshot 3 — Jenkins dashboard home page after login
+![Jenkins homepage](images/07-jenkins-homepage.png)
+*Jenkins dashboard home page after login*
 
 ### Step 3 — Create Pipeline Job
 
@@ -123,17 +138,26 @@ Open `http://<ec2-ip>:8080` → paste password → install suggested plugins →
    - Script Path: `app/Jenkinsfile`
 3. Save → **Build Now**
 
+![Flask app pipeline job](images/08-flask-app-pipeline-page.png)
+*Flask-app pipeline job configured in Jenkins*
+
+![Pipeline build status](images/09-pipeline-build-status.png)
+*Pipeline build triggered — build status view*
+
 ### Step 4 — Verify Pipeline Success
 
-> Screenshot 4 — Jenkins Stage View showing all 4 stages green (Clone Code, Build Docker Image, Deploy with Docker Compose, Health Check)
+![Stage view](images/10-stage-view.png)
+*Stage View — all 4 stages green: Clone Code, Build Docker Image, Deploy with Docker Compose, Health Check*
 
-> Screenshot 5 — Jenkins Console Output showing final lines with `curl → OK`, `Deployment successful. Flask app is live.`, `Finished: SUCCESS`
+![Jenkins console output](images/11-jenkins-console-output.png)
+*Console Output — `curl → OK`, `Deployment successful. Flask app is live.`, `Finished: SUCCESS`*
 
 ### Step 5 — Access Flask App
 
 Open `http://<ec2-ip>:5000` in browser.
 
-> Screenshot 6 — Flask app running in browser at port 5000, showing Messages page with input form and data persisted from MySQL
+![Flask app live](images/12-flask-app-live.png)
+*Flask app running in browser at port 5000 — Messages page with data persisted from MySQL*
 
 ---
 
@@ -175,13 +199,18 @@ xxxxxxxxxxxx   flask-app:latest       Up x minutes   flask-app
 xxxxxxxxxxxx   mysql:8.0              Up x minutes   mysql
 ```
 
-> Screenshot 7 — SSH terminal showing `docker ps` with jenkins, flask-app and mysql all running
+![Docker containers running](images/13-docker-containers-running.png)
+*SSH terminal — `docker ps` with jenkins, flask-app, and mysql all running*
 
 ---
 
 ## GitHub Repository
 
-> Screenshot 8 — GitHub repo showing clean file structure and commit history
+![Repo structure](images/14-repo-structure.png)
+*Clean file structure*
+
+![Commit history](images/15-commit-history.png)
+*Commit history*
 
 ---
 
