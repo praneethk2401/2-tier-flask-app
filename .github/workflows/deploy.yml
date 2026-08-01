@@ -3,7 +3,7 @@ name: Build and Push to ECR
 on:
   push:
     branches:
-      - main
+      - v2-eks
 
 jobs:
   build-and-push:
