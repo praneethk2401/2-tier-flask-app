@@ -7,122 +7,25 @@ terraform {
   }
 }
 
-
 provider "aws" {
-  region = "ap-south-2"
+  region = var.region
 }
 
-# VPC
-resource "aws_vpc" "flask_vpc" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "flask-jenkins-vpc"
-  }
+module "vpc" {
+  source = "./modules/vpc"
 }
 
-# Public Subnet
-resource "aws_subnet" "flask_subnet" {
-  vpc_id = aws_vpc.flask_vpc.id
-  cidr_block = "10.0.1.0/24"
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "flask-jenkins-subnet"
-  }
+module "security" {
+  source = "./modules/security"
+  vpc_id = module.vpc.vpc_id
 }
 
-# Internet Gateway
-resource "aws_internet_gateway" "flask_igw" {
-  vpc_id = aws_vpc.flask_vpc.id
-
-  tags = {
-    Name = "flask-jenkins-igw"
-  }
-}
-
-# Route Table
-resource "aws_route_table" "flask_rt" {
-  vpc_id = aws_vpc.flask_vpc.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.flask_igw.id
-  }
-
-  tags = {
-    Name = "flask-jenkins-rt"
-  }
-}
-
-# Route Table Association
-resource "aws_route_table_association" "flask_rta" {
-  subnet_id = aws_subnet.flask_subnet.id
-  route_table_id = aws_route_table.flask_rt.id
-}
-
-# Key Pair
-resource "aws_key_pair" "flask_key" {
-  key_name   = "flask-key"
-  public_key = file(var.public_key_path)
-}
-
-#Security Group 
-resource "aws_security_group" "flask_sg" {
-  name        = "flask-jenkins-sg"
-  description = "Allow SSH , Jenkins and HTTP traffic"
-  vpc_id      = aws_vpc.flask_vpc.id
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Jenkins Port"
-    from_port = 8080
-    to_port = 8080
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Flask App Port"
-    from_port = 5000
-    to_port = 5000
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "flask-jenkins-sg"
-  }
-}
-
-# EC2 Instance
-resource "aws_instance" "flask_server" {
-  ami                    = var.ami_id
-  instance_type          = var.instance_type
-  key_name               = aws_key_pair.flask_key.key_name
-  subnet_id              = aws_subnet.flask_subnet.id
-  vpc_security_group_ids = [aws_security_group.flask_sg.id]
-  user_data              = file("user_data.sh")
-
-  root_block_device {
-    volume_size = 20
-    volume_type = "gp3"
-  }
-
-  tags = {
-    Name = "flask-jenkins-server"
-  }
+module "ec2" {
+  source            = "./modules/ec2"
+  ami_id            = var.ami_id
+  instance_type     = var.instance_type
+  public_key_path   = var.public_key_path
+  subnet_id         = module.vpc.subnet_id
+  security_group_id = module.security.security_group_id
+  user_data_path    = "${path.module}/user_data.sh"
 }
