@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-deployment
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flask
+  template:
+    metadata:
+      labels:
+        app: flask
+    spec:
+      containers:
+        - name: flask
+          image: 502411382579.dkr.ecr.ap-south-2.amazonaws.com/flask-app:latest
+          ports:
+            - containerPort: 5000
+          envFrom:
+            - configMapRef:
+                name: flask-config
+          env:
+            - name: MYSQL_PASSWORD
+              value: "root"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 5
