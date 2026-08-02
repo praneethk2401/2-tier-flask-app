@@ -23,7 +23,7 @@ spec:
                 name: flask-config
           env:
             - name: MYSQL_PASSWORD
-              value: "root"
+              value: "root1234"
           livenessProbe:
             httpGet:
               path: /health

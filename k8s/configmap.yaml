@@ -4,6 +4,6 @@ metadata:
   name: flask-config
   namespace: default
 data:
-  MYSQL_HOST: mysql-service
+  MYSQL_HOST: flask-mysql.cbyqc4uaopwl.ap-south-2.rds.amazonaws.com
   MYSQL_USER: root
   MYSQL_DB: devops
